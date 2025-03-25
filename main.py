@@ -52,16 +52,26 @@ def send_telegram(msg):
 # ==== TUYA ====
 def get_tuya_token():
     t = str(int(time.time() * 1000))
-    sign_str = TUYA_CLIENT_ID + t
-    sign = hmac.new(TUYA_CLIENT_SECRET.encode(), sign_str.encode(), hashlib.sha256).hexdigest().upper()
-    headers = {
-        'client_id': TUYA_CLIENT_ID,
-        'sign': sign,
-        't': t,
-        'sign_method': 'HMAC-SHA256',
-    }
-    r = requests.get("https://openapi.tuyaeu.com/v1.0/token?grant_type=1", headers=headers)
-    return r.json()['result']['access_token']
+    message = TUYA_CLIENT_ID + t
+sign = hmac.new(TUYA_CLIENT_SECRET.encode(), msg=message.encode(), digestmod=hashlib.sha256).hexdigest().upper()
+
+headers = {
+    'client_id': TUYA_CLIENT_ID,
+    'sign': sign,
+    't': t,
+    'sign_method': 'HMAC-SHA256',
+}
+
+    response = requests.get(f'{TUYA_ENDPOINT}/v1.0/token?grant_type=1', headers=headers)
+    print("➡️ Tuya API response:")
+    print(response.text)  # 👈 Додай це!
+    result = response.json()
+
+    if 'result' not in result:
+        raise Exception(f"Tuya token error: {result}")
+    
+    return result['result']['access_token']
+
 
 def control_tuya(turn_on: bool, token):
     url = f"https://openapi.tuyaeu.com/v1.0/devices/{TUYA_DEVICE_ID}/commands"
